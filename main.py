@@ -1,5 +1,4 @@
 import sys
-import threading
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -11,10 +10,10 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent, QSound
 from PyQt5.QtCore import QUrl
-from main_ui import Ui_MainWindow  # Import the generated class
 import matplotlib.pyplot as plt
 import wave
 import io
+from main_ui import Ui_MainWindow  # Import the generated class
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -200,7 +199,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # Translate and display the last 5 entries for the location
             translated_entries = [self.translate_loc_value(val) for val in self.history[button_id]]
             label_widget.setText(",".join(translated_entries))
-            finalres = self.translate_loc_value(locNum)            
+            finalres = self.translate_loc_value(locNum)
+            
             id=button_id
             if id=="L1_S1" or id=="L2_S1" or id=="L3_S1" or id=="L4_S1":
                 if len(translated_entries)>1:
@@ -372,7 +372,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+    try:
+        app = QApplication(sys.argv)
+        window = MainWindow()
+        window.show()
+        sys.exit(app.exec_())
+
+    except Exception as e:
+        print(f"Error in main program: {e}")
