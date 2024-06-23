@@ -12,6 +12,10 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent, QSound
 from PyQt5.QtCore import QUrl
 from main_ui import Ui_MainWindow  # Import the generated class
+import matplotlib.pyplot as plt
+import wave
+import io
+
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -68,7 +72,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.L4_S1_listen_pushButton.clicked.connect(lambda: self.on_button_click('L4_S1'))
         self.L4_S2_listen_pushButton.clicked.connect(lambda: self.on_button_click('L4_S2'))
 
+        self.L1_S1_graph_pushButton.clicked.connect(lambda: self.plot_waveform('L1_S1'))
+        self.L1_S2_graph_pushButton.clicked.connect(lambda: self.plot_waveform('L1_S2'))
+        self.L2_S1_graph_pushButton.clicked.connect(lambda: self.plot_waveform('L2_S1'))
+        self.L2_S2_graph_pushButton.clicked.connect(lambda: self.plot_waveform('L2_S2'))
+        self.L3_S1_graph_pushButton.clicked.connect(lambda: self.plot_waveform('L3_S1'))
+        self.L3_S2_graph_pushButton.clicked.connect(lambda: self.plot_waveform('L3_S2'))
+        self.L4_S1_graph_pushButton.clicked.connect(lambda: self.plot_waveform('L4_S1'))
+        self.L4_S2_graph_pushButton.clicked.connect(lambda: self.plot_waveform('L4_S2'))
+
         self.btnBack.clicked.connect(lambda: self.back_to_mainscreen())
+        self.btnBack_2.clicked.connect(lambda: self.back_to_mainscreen_2())
+
 
     def get_data(self):
         folder = Path('data') / 'input'
@@ -204,7 +219,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QSound.play(filename)
         except Exception as e:
             print(f"Error in play_sound: {e}")
-
+    def back_to_mainscreen_2(self):
+            self.stackedWidget.setCurrentIndex(0)
     def back_to_mainscreen(self):
         self.media_player.stop()  # Reset media player state
         self.stackedWidget.setCurrentIndex(0)
@@ -264,6 +280,52 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return f"{hours}:{minutes:02}:{seconds:02}"
         else:
             return f"{minutes}:{seconds:02}"
+
+    def plot_waveform(self, button_id):
+        try:
+            # Fetch the audio data
+            street_noise_data = self.data[button_id].to_numpy()
+            location, sample = button_id.split('_')
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+                self.save_wav(temp_file.name, street_noise_data, self.sample_rate)
+                temp_file_path = temp_file.name
+
+            # Read and plot the waveform
+            spf = wave.open(temp_file_path, "r")
+            signal = spf.readframes(-1)
+            signal = np.frombuffer(signal, np.int16)
+            fs = spf.getframerate()
+
+            if spf.getnchannels() == 2:
+                print("Just mono files")
+                return
+
+            Time = np.linspace(0, len(signal) / fs, num=len(signal))
+
+            # Create a plot and save it to a buffer
+            plt.figure()
+            loc=f"Location {location[1]} Sample {sample[1]}"
+            plt.title(f"Signal Wave - {loc}")
+            plt.plot(Time, signal)
+            plt.xlabel("Time (s)")
+            plt.ylabel("Amplitude")
+
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            plt.close()
+            buf.seek(0)
+
+            # Load the buffer into a QPixmap
+            pixmap = QPixmap()
+            pixmap.loadFromData(buf.getvalue())
+
+            # Set the pixmap to the QLabel and switch to the page with the graph
+            self.lblGraph.setPixmap(pixmap)
+            self.stackedWidget.setCurrentIndex(2)
+
+        except Exception as e:
+            print(f"Error in plot_waveform: {e}")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
