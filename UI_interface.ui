@@ -629,7 +629,7 @@ font: 75  &quot;Arial&quot;;color:rgb(0, 0, 0)
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_2">
                  <item>
-                  <widget class="QLabel" name="L4_time_frame">
+                  <widget class="QLabel" name="L4_time_input_label">
                    <property name="styleSheet">
                     <string notr="true">font: 12pt &quot;Arial&quot;;</string>
                    </property>

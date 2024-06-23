@@ -42,7 +42,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Connect play/pause button
         self.btnPlayPause.clicked.connect(self.toggle_play_pause)
-
+        # Dictionary to store start times for each location sample 1
+        self.location_start_times = {
+            'L1_S1': datetime.now(),
+            'L2_S1': datetime.now(),
+            'L3_S1': datetime.now(),
+            'L4_S1': datetime.now()
+        }
         # Data structure to keep track of the last 5 entries for each location
         self.history = {
             'L1_S1': [],
@@ -133,6 +139,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # Display the data from the CSV file on the UI (example: filling a table)
             self.display_result_data(df)
+            
         except Exception as e:
             print(f"Error in check_result_csv: {e}")
 
@@ -160,6 +167,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception as e:
             print(f"Error in update_history: {e}")
 
+    def display_result_time(self, df):
+        try:
+            # Update time in condition for each location
+            for button_id in self.location_start_times:
+                start_time = self.location_start_times[button_id]
+                current_time = datetime.now()
+                time_elapsed = current_time - start_time
+                self.update_time_in_condition(button_id, time_elapsed)
+        except Exception as e:
+            print(f"Error in display_result_data: {e}")
     def display_result_data(self, df):
         try:
             # Extract and display the last 5 entries for each location
@@ -183,7 +200,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # Translate and display the last 5 entries for the location
             translated_entries = [self.translate_loc_value(val) for val in self.history[button_id]]
             label_widget.setText(",".join(translated_entries))
-            finalres = self.translate_loc_value(locNum)
+            finalres = self.translate_loc_value(locNum)            
+            id=button_id
+            if id=="L1_S1" or id=="L2_S1" or id=="L3_S1" or id=="L4_S1":
+                if len(translated_entries)>1:
+                    lastEntry=translated_entries[-1]
+                    secondLastEntry=translated_entries[-2]
+                    if lastEntry!=secondLastEntry:
+                        self.location_start_times[id]=datetime.now()
+                start_time = self.location_start_times[id]
+                current_time = datetime.now()
+                time_elapsed = current_time - start_time
+                self.update_time_in_condition(id, time_elapsed)
+
 
             # Set the image based on the latest entry
             if locNum is not None:
@@ -195,6 +224,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception as e:
             print(f"Error in update_loc_display: {e}")
 
+    def update_time_in_condition(self, button_id, elapsed_time):
+        try:
+            # Calculate the elapsed time in minutes
+            elapsed_minutes = int(elapsed_time.total_seconds() // 60)
+            # Update the corresponding label for the location
+            if button_id == 'L1_S1':
+                self.L1_time_input_label.setText(str(elapsed_minutes))
+            elif button_id == 'L2_S1':
+                self.L2_time_input_label.setText(str(elapsed_minutes))
+            elif button_id == 'L3_S1':
+                self.L3_time_input_label.setText(str(elapsed_minutes))
+            elif button_id == 'L4_S1':
+                self.L4_time_input_label.setText(str(elapsed_minutes))
+        except Exception as e:
+            print(f"Error in update_time_in_condition: {e}")
     def translate_loc_value(self, value):
         try:
             # Translate numeric values to text
